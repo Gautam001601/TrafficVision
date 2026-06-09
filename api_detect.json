@@ -1,0 +1,5 @@
+{
+  "login_required": true,
+  "login_url": "/accounts/login/",
+  "next": "/"
+}

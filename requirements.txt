@@ -1,0 +1,16 @@
+django
+djangorestframework
+django-allauth
+ultralytics
+torch
+torchvision
+opencv-python-headless
+numpy
+pandas
+pillow
+matplotlib
+seaborn
+streamlit
+python-dotenv
+roboflow
+gdown

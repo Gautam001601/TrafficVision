@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Vehicle Detection • Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-content">
+    <h1>Vehicle Detection </h1>
+    <p>
+      Upload an image and get an annotated output with detection details (class, confidence, bounding boxes).
+      
+    </p>
+
+    <div class="hero-badges">
+      <div class="badge-pill">
+        <img src="{% static 'img/car.svg' %}" alt="car" width="22" height="22">
+        <span>Cars</span>
+      </div>
+      <div class="badge-pill">
+        <img src="{% static 'img/truck.svg' %}" alt="truck" width="22" height="22">
+        <span>Trucks</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Detect Vehicles</h2>
+    <p>Drag & drop an image (or click). Then run detection.</p>
+  </div>
+
+  <div class="uploader" id="dropZone">
+    <input type="file" id="fileInput" accept="image/*" />
+    <div class="uploader-inner">
+      <div class="uploader-title">Drop image here</div>
+      <div class="uploader-sub">or click to browse</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="detectBtn" disabled>Run Detection</button>
+    <button class="btn btn-ghost" id="clearBtn" disabled>Clear</button>
+    <div class="status" id="statusText"></div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-title">Original</div>
+      <div class="imgwrap">
+        <img id="originalImg" alt="Original preview" />
+        <div class="placeholder" id="originalPlaceholder">No image selected</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Annotated Output</div>
+      <div class="imgwrap">
+        <img id="annotatedImg" alt="Annotated output" />
+        <div class="placeholder" id="annotatedPlaceholder">Run detection to see results</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Detections</h2>
+    <p>Structured results for evaluation and debugging.</p>
+  </div>
+
+  <div class="results-head">
+    <div class="metric">
+      <div class="metric-label">Total</div>
+      <div class="metric-value" id="totalDetections">0</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Top confidence</div>
+      <div class="metric-value gold" id="topConfidence">—</div>
+    </div>
+  </div>
+
+  <div class="table" id="detectionsTable">
+    <div class="table-empty" id="tableEmpty">No results yet.</div>
+  </div>
+</section>
+{% endblock %}

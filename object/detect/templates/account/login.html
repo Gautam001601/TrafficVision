@@ -1,0 +1,74 @@
+{% load static i18n %}
+{% load account %}
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% trans "Sign In" %} • Vehicle Detection</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+  <section class="auth-wrapper">
+    <div class="auth-card">
+
+      <div class="auth-header">
+        <div class="logo">VD</div>
+        <h1>Welcome Back</h1>
+        <p>Sign in to run vehicle detection</p>
+      </div>
+
+      {% if form.errors %}
+        <div class="alert-error">Invalid username or password.</div>
+      {% endif %}
+
+      <form method="post" action="{% url 'account_login' %}" class="auth-form">
+        {% csrf_token %}
+        {{ redirect_field }}
+
+        {% if form.non_field_errors %}
+          <div class="alert-error">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="form-group">
+          {{ form.login.label_tag }}
+          {{ form.login }}
+          {% if form.login.errors %}
+            <div class="alert-error" style="margin-top:8px;">{{ form.login.errors }}</div>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          {{ form.password.label_tag }}
+          {{ form.password }}
+          <a href="{% url 'account_reset_password' %}" class="forgot-link">
+            Forgot password?
+          </a>
+        </div>
+
+        <div class="form-options">
+          <label class="checkbox-label">
+            {{ form.remember }} Remember me
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          {% trans "Sign In" %}
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Need an account?
+        <a href="{% url 'account_signup' %}?next={{ request.GET.next|default:'/' }}">
+          Sign up
+        </a>
+        &nbsp;•&nbsp;
+        <a href="{% url 'contact' %}">contact admin</a>
+      </div>
+
+    </div>
+  </section>
+</body>
+</html>

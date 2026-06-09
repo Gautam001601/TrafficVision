@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Vehicle Detection • Contact{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="card-head">
+    <h2>Contact</h2>
+    <p>Questions, collaboration, or improvements — send a message.</p>
+  </div>
+
+  <div class="contact-grid">
+    <div class="contact-info">
+      <div class="info-card">
+        <h3>Project Support</h3>
+        <p>Use the form to reach the project owner or team.</p>
+        <div class="muted">Response time depends on availability.</div>
+      </div>
+
+      <div class="info-card">
+        <h3>What to include</h3>
+        <ul class="list">
+          <li>Your dataset type (images/video)</li>
+          <li>Expected classes (car, truck, etc.)</li>
+          <li>Any error screenshot or logs</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="contact-form">
+      {% if success %}
+      <div class="success">
+        {{ success }}
+      </div>
+      {% endif %}
+      {% if error %}
+      <div class="alert-error">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="post" class="form">
+        {% csrf_token %}
+        
+        <label>
+          <span>Full Name</span>
+          <input name="name" type="text" placeholder="Enter your full name" required autocomplete="name">
+        </label>
+
+        <label>
+          <span>Email Address</span>
+          <input name="email" type="email" placeholder="Enter your email id" required autocomplete="email">
+        </label>
+
+        <label>
+          <span>Phone Number</span>
+          <input name="pnumber" type="tel" placeholder="Enter your valid contact number" autocomplete="tel">
+        </label>
+
+        <label>
+          <span>Message</span>
+          <textarea name="msg" rows="5" placeholder="Enter your message" required></textarea>
+        </label>
+
+        <button class="btn btn-primary" type="submit">Send Message</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Vehicle Detection{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script defer src="{% static 'js/script.js' %}"></script>
+  <style>
+  body.site-bg {
+    background: 
+      linear-gradient(180deg, rgba(27,28,15,0.92), rgba(11,12,8,0.96)),
+      url("{% static 'img/pexels-asemirski-36366992.jpg' %}") center/cover fixed no-repeat;
+  }
+  </style>
+</head>
+<body class="site-bg">
+  <header class="topbar">
+    <a class="brand" href="{% url 'index' %}">
+      <div class="logo">VD</div>
+      <div class="brand-text">
+        <div class="brand-title">Vehicle Detection</div>
+        <div class="brand-subtitle">Cars & Trucks • YOLO • Django</div>
+      </div>
+    </a>
+
+    <nav class="nav">
+      <a class="{% if active == 'home' %}active{% endif %}" href="{% url 'index' %}">Home</a>
+      <a class="{% if active == 'about' %}active{% endif %}" href="{% url 'about' %}">About</a>
+      <a class="{% if active == 'contact' %}active{% endif %}" href="{% url 'contact' %}">Contact</a>
+      <a href="{% url 'detection_history' %}">History</a>
+      {% if user.is_authenticated %}
+      <div class="account-menu" id="accountMenu">
+        <button type="button" class="user-badge" id="accountBtn">
+          {{ user.username }}
+        </button>
+        <div class="account-dropdown" id="accountDropdown">
+          <form action="{% url 'account_logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost btn-sm account-logout">
+              Logout
+            </button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <a href="{% url 'account_login' %}" class="btn btn-primary btn-sm">Login</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div>© {% now "Y" %} Vehicle Detection • Built with Django</div>
+  </footer>
+  <script>
+  (function () {
+    const menu = document.getElementById("accountMenu");
+    const btn = document.getElementById("accountBtn");
+
+    if (!menu || !btn) return;
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target)) {
+        menu.classList.remove("open");
+      }
+    });
+  })();
+  </script>
+</body>
+</html>
