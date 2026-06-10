@@ -4,8 +4,4 @@ opencv-python-headless
 numpy
 pandas
 pillow
-matplotlib
-seaborn
 gdown
-torch==2.3.0
-torchvision==0.18.0
