@@ -1,6 +1,4 @@
-django
-djangorestframework
-django-allauth
+streamlit
 ultralytics
 torch
 torchvision
@@ -10,7 +8,5 @@ pandas
 pillow
 matplotlib
 seaborn
-streamlit
-python-dotenv
-roboflow
 gdown
+python-dotenv

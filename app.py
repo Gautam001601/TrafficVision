@@ -1,13 +1,35 @@
 from pathlib import Path
 from collections import Counter
+import os
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 from PIL import Image
+
+# ─── Model Download from Google Drive ───────────────────────────────────────
+MODEL_PATH = Path("best.pt")
+
+def download_model():
+    if not MODEL_PATH.exists():
+        try:
+            import gdown
+            st.info("⬇️ Downloading model from Google Drive...")
+            file_id = "1XWlnqkcUtW86K5qVz5nXNKg3OuZvfL4C"
+            url = f"https://drive.google.com/uc?id={file_id}"
+            gdown.download(url, str(MODEL_PATH), quiet=False)
+            st.success("✅ Model downloaded!")
+        except Exception as e:
+            st.error(f"❌ Model download failed: {e}")
+            st.stop()
+
+download_model()
+
 from ultralytics import YOLO
 
-from config import RUN_NAME, DEVICE, ARTIFACTS_DIR
+# ─── Config (inline, no local config.py needed) ──────────────────────────────
+RUN_NAME = "vehicle_detection_nano-3"
+DEVICE = "cpu"  # Streamlit Cloud has no GPU
 
 # ─── Page Config ────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -22,7 +44,6 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800;900&display=swap');
 
-/* ── Root & Reset ── */
 :root {
     --bg: #0b0c08;
     --gold: #E3A545;
@@ -38,17 +59,13 @@ html, body, [class*="css"] {
     font-family: 'Syne', sans-serif !important;
     color: var(--text) !important;
 }
-
 .stApp {
     background: linear-gradient(160deg, #0f1009 0%, #0b0c08 60%, #0e0d07 100%);
     min-height: 100vh;
 }
-
-/* Hide Streamlit branding */
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding: 2rem 2.5rem 3rem !important; max-width: 1200px; }
 
-/* ── Hero Banner ── */
 .hero-banner {
     background:
         linear-gradient(135deg, rgba(227,165,69,0.08) 0%, rgba(145,162,104,0.05) 100%),
@@ -103,11 +120,7 @@ html, body, [class*="css"] {
     max-width: 55ch;
     margin-bottom: 24px;
 }
-.hero-pills {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
+.hero-pills { display: flex; gap: 10px; flex-wrap: wrap; }
 .pill {
     display: inline-flex;
     align-items: center;
@@ -120,8 +133,6 @@ html, body, [class*="css"] {
     color: var(--text) !important;
     font-family: 'Space Mono', monospace !important;
 }
-
-/* ── Metric Cards ── */
 .metric-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -144,16 +155,9 @@ html, body, [class*="css"] {
     color: var(--muted) !important;
     margin-bottom: 6px;
 }
-.metric-card .value {
-    font-size: 26px;
-    font-weight: 900;
-    color: var(--gold) !important;
-    line-height: 1;
-}
+.metric-card .value { font-size: 26px; font-weight: 900; color: var(--gold) !important; line-height: 1; }
 .metric-card .value.sage { color: var(--sage) !important; }
 .metric-card .value.white { color: var(--text) !important; }
-
-/* ── Section Card ── */
 .section-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -178,19 +182,8 @@ html, body, [class*="css"] {
     display: flex; align-items: center; justify-content: center;
     font-size: 18px;
 }
-.section-title {
-    font-size: 18px;
-    font-weight: 800;
-    margin: 0;
-    color: var(--text) !important;
-}
-.section-sub {
-    font-size: 13px;
-    color: var(--muted) !important;
-    margin: 0;
-}
-
-/* ── Upload zone ── */
+.section-title { font-size: 18px; font-weight: 800; margin: 0; color: var(--text) !important; }
+.section-sub { font-size: 13px; color: var(--muted) !important; margin: 0; }
 .upload-hint {
     text-align: center;
     padding: 18px;
@@ -198,19 +191,15 @@ html, body, [class*="css"] {
     color: var(--muted) !important;
     font-family: 'Space Mono', monospace !important;
 }
-
-/* ── Streamlit widget overrides ── */
 .stFileUploader > div {
     background: rgba(18,20,12,0.5) !important;
     border: 1.5px dashed rgba(227,165,69,0.4) !important;
     border-radius: 16px !important;
-    transition: all 0.2s !important;
 }
 .stFileUploader > div:hover {
     border-color: rgba(227,165,69,0.7) !important;
     background: rgba(227,165,69,0.05) !important;
 }
-.stSlider > div { padding: 0 4px; }
 .stTabs [data-baseweb="tab-list"] {
     background: rgba(18,20,12,0.4) !important;
     border-radius: 12px !important;
@@ -228,9 +217,6 @@ html, body, [class*="css"] {
     background: rgba(227,165,69,0.15) !important;
     color: var(--gold) !important;
 }
-.stTabs [data-baseweb="tab-panel"] {
-    padding-top: 20px !important;
-}
 .stButton > button {
     background: linear-gradient(135deg, #E3A545, #c98f38) !important;
     color: #1B1C0F !important;
@@ -239,25 +225,13 @@ html, body, [class*="css"] {
     border: none !important;
     border-radius: 12px !important;
     padding: 10px 24px !important;
-    transition: all 0.2s !important;
-}
-.stButton > button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 24px rgba(227,165,69,0.3) !important;
 }
 div[data-testid="stSidebar"] {
     background: rgba(11,12,8,0.95) !important;
     border-right: 1px solid var(--border) !important;
 }
 div[data-testid="stSidebar"] * { color: var(--text) !important; }
-
-/* ── Detection table ── */
-.det-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-    margin-top: 8px;
-}
+.det-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
 .det-table th {
     font-family: 'Space Mono', monospace;
     font-size: 10px;
@@ -268,11 +242,7 @@ div[data-testid="stSidebar"] * { color: var(--text) !important; }
     text-align: left;
     border-bottom: 1px solid rgba(227,165,69,0.15);
 }
-.det-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid rgba(142,145,140,0.1);
-    color: var(--text);
-}
+.det-table td { padding: 10px 14px; border-bottom: 1px solid rgba(142,145,140,0.1); color: var(--text); }
 .det-table tr:last-child td { border-bottom: none; }
 .conf-badge {
     display: inline-flex;
@@ -300,8 +270,6 @@ div[data-testid="stSidebar"] * { color: var(--text) !important; }
     border: 1px solid rgba(142,145,140,0.2);
     font-weight: 600;
 }
-
-/* ── Info box ── */
 .info-box {
     background: rgba(145,162,104,0.08);
     border: 1px solid rgba(145,162,104,0.25);
@@ -320,8 +288,6 @@ div[data-testid="stSidebar"] * { color: var(--text) !important; }
     color: rgba(244,245,239,0.8) !important;
     margin: 8px 0;
 }
-
-/* ── Image panels ── */
 .img-panel-label {
     font-family: 'Space Mono', monospace !important;
     font-size: 11px;
@@ -331,13 +297,6 @@ div[data-testid="stSidebar"] * { color: var(--text) !important; }
     margin-bottom: 8px;
     text-align: center;
 }
-
-/* ── Bar chart ── */
-.stVegaLiteChart, [data-testid="stArrowVegaLiteChart"] {
-    background: transparent !important;
-}
-
-/* ── Sidebar ── */
 .sidebar-section {
     background: rgba(27,28,15,0.6);
     border: 1px solid var(--border);
@@ -358,37 +317,11 @@ div[data-testid="stSidebar"] * { color: var(--text) !important; }
 
 
 # ─── Model Loading ───────────────────────────────────────────────────────────
-def find_best_model():
-    """Search for trained model, fallback to yolov8n.pt"""
-    saved_path = ARTIFACTS_DIR / "best_model_path.txt"
-    if saved_path.exists():
-        p = Path(saved_path.read_text().strip())
-        if p.exists():
-            return p, "trained"
-
-    default_path = Path("runs") / "detect" / RUN_NAME / "weights" / "best.pt"
-    if default_path.exists():
-        return default_path, "trained"
-
-    all_models = list(Path("runs/detect").glob("**/weights/best.pt"))
-    if all_models:
-        all_models.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-        return all_models[0], "trained"
-
-    # Fallback to pretrained
-    fallback = Path("yolov8n.pt")
-    if fallback.exists():
-        return fallback, "pretrained"
-
-    return None, None
-
-
 @st.cache_resource
 def load_model():
-    model_path, model_type = find_best_model()
-    if not model_path:
-        return None, None, None
-    return YOLO(str(model_path)), model_path, model_type
+    if MODEL_PATH.exists():
+        return YOLO(str(MODEL_PATH)), MODEL_PATH, "trained"
+    return None, None, None
 
 
 def get_detection_table(result):
@@ -421,7 +354,6 @@ def run_detection(image_np, conf_threshold):
     return result
 
 
-# ─── Load Model ─────────────────────────────────────────────────────────────
 model, model_path, model_type = load_model()
 
 
@@ -430,14 +362,15 @@ with st.sidebar:
     st.markdown("""
     <div style='padding: 8px 0 20px'>
         <div style='font-size:22px; font-weight:900; letter-spacing:-0.5px'>🚗 VehicleDetect</div>
-        <div style='font-family:"Space Mono",monospace; font-size:10px; letter-spacing:3px; color:rgba(244,245,239,0.5); margin-top:4px'>YOLOv8 NANO · DETECTION</div>
+        <div style='font-family:"Space Mono",monospace; font-size:10px; letter-spacing:3px;
+        color:rgba(244,245,239,0.5); margin-top:4px'>YOLOv8 NANO · DETECTION</div>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="sidebar-label">Detection Settings</div>', unsafe_allow_html=True)
     conf_threshold = st.slider(
         "Confidence Threshold", 0.10, 1.0, 0.25, 0.05,
-        help="Lower = more detections (may include false positives). Higher = only very confident detections."
+        help="Lower = more detections. Higher = only confident detections."
     )
 
     st.markdown("---")
@@ -446,17 +379,15 @@ with st.sidebar:
     if model is None:
         st.error("No model found.")
     else:
-        badge_color = "#91A268" if model_type == "trained" else "#E3A545"
-        badge_text = "✅ Fine-tuned" if model_type == "trained" else "⚡ Pretrained"
         st.markdown(f"""
         <div class="sidebar-section">
             <div style='font-size:13px; margin-bottom:8px'>
-                <span style='background:rgba(27,28,15,0.8); border:1px solid {badge_color}40;
-                color:{badge_color}; padding:3px 10px; border-radius:999px; font-size:11px;
-                font-family:"Space Mono",monospace'>{badge_text}</span>
+                <span style='background:rgba(27,28,15,0.8); border:1px solid #91A26840;
+                color:#91A268; padding:3px 10px; border-radius:999px; font-size:11px;
+                font-family:"Space Mono",monospace'>✅ Fine-tuned</span>
             </div>
-            <div style='font-family:"Space Mono",monospace; font-size:11px; color:rgba(244,245,239,0.6);
-            word-break:break-all'>{model_path.name}</div>
+            <div style='font-family:"Space Mono",monospace; font-size:11px;
+            color:rgba(244,245,239,0.6)'>best.pt</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -474,7 +405,8 @@ st.markdown("""
 <div class="hero-banner">
     <div class="hero-label">Real-Time AI Detection System</div>
     <h1 class="hero-title">Vehicle Detection<br>with YOLOv8 Nano</h1>
-    <p class="hero-sub">Upload an image or use your camera to instantly detect and classify vehicles — cars, trucks, buses, and more — using a deep learning model trained on 4,058 real-world traffic images.</p>
+    <p class="hero-sub">Upload an image or use your camera to instantly detect and classify vehicles —
+    cars, trucks, buses, and more — using a deep learning model trained on 4,058 real-world traffic images.</p>
     <div class="hero-pills">
         <div class="pill">🎯 12 Classes</div>
         <div class="pill">⚡ ~12ms Inference</div>
@@ -485,7 +417,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if model is None:
-    st.error("⚠️ No model found. Run `python train.py` first, or ensure `yolov8n.pt` is in your project folder.")
+    st.error("⚠️ Model not loaded. Please refresh the page.")
     st.stop()
 
 
@@ -494,11 +426,9 @@ tab1, tab2 = st.tabs(["📷  Image Upload", "📸  Camera"])
 
 
 def display_results(image, result, source_label="Original"):
-    """Shared result display for both tabs."""
     table = get_detection_table(result)
     annotated = result.plot()
 
-    # ── Metric row ──
     total = len(table)
     top_conf = f"{table['Confidence'].max() * 100:.1f}%" if total > 0 else "—"
     unique_cls = table["Class"].nunique() if total > 0 else 0
@@ -525,7 +455,6 @@ def display_results(image, result, source_label="Original"):
     </div>
     """, unsafe_allow_html=True)
 
-    # ── Image comparison ──
     col1, col2 = st.columns(2, gap="medium")
     with col1:
         st.markdown(f'<div class="img-panel-label">🖼 {source_label}</div>', unsafe_allow_html=True)
@@ -536,7 +465,6 @@ def display_results(image, result, source_label="Original"):
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Detections table ──
     col_a, col_b = st.columns([3, 2], gap="large")
 
     with col_a:
@@ -553,7 +481,8 @@ def display_results(image, result, source_label="Original"):
         """, unsafe_allow_html=True)
 
         if table.empty:
-            st.markdown('<div class="warn-box">⚠️ No vehicles detected. Try lowering the confidence threshold in the sidebar.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="warn-box">⚠️ No vehicles detected. Try lowering the confidence threshold.</div>',
+                        unsafe_allow_html=True)
         else:
             rows_html = ""
             for _, row in table.iterrows():
@@ -563,16 +492,15 @@ def display_results(image, result, source_label="Original"):
                 <tr>
                     <td><span class="class-tag">{row['Class']}</span></td>
                     <td><span class="conf-badge {badge_class}">{conf_pct:.1f}%</span></td>
-                    <td style='font-family:"Space Mono",monospace; font-size:12px; color:rgba(244,245,239,0.6)'>
+                    <td style='font-family:"Space Mono",monospace; font-size:12px;
+                    color:rgba(244,245,239,0.6)'>
                         [{row['x1']}, {row['y1']}, {row['x2']}, {row['y2']}]
                     </td>
                 </tr>"""
             st.markdown(f"""
             <table class="det-table">
                 <thead><tr>
-                    <th>Class</th>
-                    <th>Confidence</th>
-                    <th>Bounding Box</th>
+                    <th>Class</th><th>Confidence</th><th>Bounding Box</th>
                 </tr></thead>
                 <tbody>{rows_html}</tbody>
             </table>
@@ -595,7 +523,8 @@ def display_results(image, result, source_label="Original"):
             counts = table["Class"].value_counts()
             st.bar_chart(counts, color="#E3A545", use_container_width=True)
         else:
-            st.markdown('<div class="warn-box" style="margin-top:12px">No data to chart.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="warn-box" style="margin-top:12px">No data to chart.</div>',
+                        unsafe_allow_html=True)
 
 
 # ─── Tab 1: Image Upload ─────────────────────────────────────────────────────
@@ -615,12 +544,14 @@ with tab1:
 
         display_results(image, result, source_label="Uploaded Image")
     else:
-        st.markdown('<div class="upload-hint">← Adjust confidence threshold in sidebar &nbsp;|&nbsp; Supported: JPG, PNG, WEBP</div>', unsafe_allow_html=True)
+        st.markdown('<div class="upload-hint">← Adjust confidence in sidebar &nbsp;|&nbsp; Supported: JPG, PNG, WEBP</div>',
+                    unsafe_allow_html=True)
 
 
 # ─── Tab 2: Camera ───────────────────────────────────────────────────────────
 with tab2:
-    st.markdown('<div class="info-box">📸 Take a photo using your device camera. Detection runs automatically.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="info-box">📸 Take a photo using your device camera. Detection runs automatically.</div>',
+                unsafe_allow_html=True)
     camera_image = st.camera_input("", label_visibility="collapsed")
 
     if camera_image:
