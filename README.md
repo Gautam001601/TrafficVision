@@ -12,7 +12,7 @@
 *A full-stack AI web application for real-time vehicle detection and 
 classification using a custom-trained YOLOv8 model*
 
-[Live Demo](#) • [Report Bug](#) • [GitHub](https://github.com/Gautam001601/TrafficVision)
+[🚀 Live Demo](https://trafficvision-fbaf4qjxlblyt52jsbptng.streamlit.app/) • [Report Bug](#) • [GitHub](https://github.com/Gautam001601/TrafficVision)
 
 </div>
 
